@@ -1,0 +1,33 @@
+@startuml
+!include ../c4/C4_Context.puml
+
+
+Person(client, "Клиент", "Клиент банка")
+Person(branch_employee, "Фронт-офис банка", "Сотрудник отделения")
+Person(backoffice_deposit, "Бэк-офис по депозитам", "Менеджер по депозитам")
+Person(backoffice_credit, "Бэк-офис по кредитам", "Менеджер по кредитам")
+Person(callcenter, "Кол-центр", "Сотрудник кол-центра")
+
+
+System(ABS, "АБС", "Автоматизированная банковская система")
+System(Excel, "Excel-файл ставок", "Файл расчёта ставок. Используется вручную")
+System(SMS, "СМС-шлюз", "Отправка уведомлений клиентам")
+System(CallCRM, "Система кол-центра", "Заведение обращений клиентов")
+
+
+Rel(client, branch_employee, "Обращение в отделение")
+Rel(client, callcenter, "Звонок в кол-центр")
+
+Rel(callcenter, CallCRM, "Заведение обращения")
+Rel(CallCRM, ABS, "Передача заявки в АБС")
+Rel(branch_employee, backoffice_deposit, "Запрос ставки (по email)")
+Rel(backoffice_deposit, Excel, "Ведёт расчёт ставок")
+Rel(backoffice_deposit, backoffice_credit, "Запрос спецставки (по email, Excel-файл)")
+Rel(backoffice_credit, Excel, "Возвращает данные по спецставке (правит Excel)")
+Rel(backoffice_deposit, ABS, "Заведение заявки")
+Rel(ABS, SMS, "Оповещение клиента о ставке")
+Rel(branch_employee, ABS, "Создаёт депозит и загружает документы")
+Rel(backoffice_credit, ABS, "Анализирует кредитный риск для расчёта спецставки")
+
+
+@enduml
