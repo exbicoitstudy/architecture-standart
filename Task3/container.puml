@@ -48,7 +48,7 @@ Rel(queue, CallCRM, "новая заявка без данных", "async", $tag
 Rel(CallCRM, callcenter, "Уведомление о новой заявке без данных")
 Rel(deposits, CallCRM, "Каталога депозитов")
 Rel(callcenter, client, "Звонок клиенту для получения данных", "offline", $tags="dashed")
-Rel(callcenter, orders, "изменяет заявку в системе заявок -данные клиента, итоговый кредит если выбран персональный")
+Rel(callcenter, orders, "изменяет заявку в системе заявок -  данные клиента, итоговая ставка, если персональная")
 
 
 Rel(client, IB, "Клиент заходит на страницу депозитов ИБ, СМС код", "offline", $tags="dashed")
