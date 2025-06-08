@@ -1,0 +1,74 @@
+@startuml
+!include <C4/C4_Container>
+AddRelTag("dashed", $textColor=$ARROW_FONT_COLOR, $lineColor=$ARROW_COLOR, $lineStyle=DashedLine())
+Person(client, "Клиент", "Клиент банка")
+Person(branch_employee, "Фронт-офис банка", "Сотрудник отделения")
+Person(backoffice_deposit, "Бэк-офис по депозитам", "Менеджер по депозитам")
+Person(backoffice_credit, "Бэк-офис по кредитам", "Менеджер по кредитам")
+Person(callcenter, "Кол-центр", "Сотрудник кол-центра")
+System_Boundary(it, "IT системы банка"){
+    System_Boundary(ib_domain, "Интернет банк"){
+        Container(IB, "Интернет банк", "ASP.NET")
+        ContainerDb(IB_DB, "DB Интернет банка", "MS SQL")
+    }
+    System_Boundary(site_domain, "Сайт"){
+        Container(site, "Сайт", "PHP и React.js")
+        ContainerDb(site_db, "DB Сайта", "Oracle")
+    }
+    System_Boundary(ABS_domain, "АБС"){
+        Container(ABS, "АБС", "Автоматизированная банковская система", "Delphi")
+        ContainerDb(ABS_db, "DB АБС")
+    }
+    Container(SMS, "СМС-шлюз", "Отправка уведомлений клиентам")
+    Container(CallCRM, "Система кол-центра", "Заведение обращений клиентов")
+    ContainerQueue(queue, "Брокер сообщений", "Kafka")
+    System_Boundary(deposits_domain, "Каталог депозитов"){
+        Container(deposits, "Каталог депозитов, хранение excel ставок", "ASP.NET, React.js")
+        ContainerDb(deposits_db, "DB депозитов", "MS SQL")
+        ContainerDb(deposits_s3, "S3 хранилище файлов excel", "s3")
+    }
+    System_Boundary(orders_domain, "Система заявок"){
+        Container(orders, "Система заявок", "ASP.NET, React.js")
+        ContainerDb(orders_db, "DB заявок", "MS SQL")
+    }
+}
+Rel(IB, IB_DB, "данные", "SQL")
+Rel(site, site_db, "данные", "SQL")
+Rel(ABS, ABS_db, "данные, процедуры", "SQL, PL-SQL")
+Rel(deposits, deposits_db, "данные", "SQL")
+Rel(deposits, deposits_s3, "файлы")
+Rel(orders, orders_db, "данные", "SQL")
+
+
+Rel(client, site, "Клиент заходит на страницу депозитов сайта")
+Rel(site, deposits, "Сайт получает список депозитов с актуальными ставками из каталога депозитов")
+Rel(site, orders, "сохраняет заявку в системе заявок")
+Rel(orders, queue, "новая заявка без данных", "async", $tags="dashed")
+Rel(queue, CallCRM, "новая заявка без данных", "async", $tags="dashed")
+Rel(CallCRM, callcenter, "Уведомление о новой заявке без данных")
+Rel(deposits, CallCRM, "Каталога депозитов")
+Rel(callcenter, client, "Звонок клиенту для получения данных", "offline", $tags="dashed")
+Rel(callcenter, orders, "изменяет заявку в системе заявок -  данные клиента, итоговая ставка, если персональная")
+
+
+Rel(client, IB, "Клиент заходит на страницу депозитов ИБ, СМС код", "offline", $tags="dashed")
+Rel(IB, deposits, "получает список депозитов с актуальными и персональными ставками")
+Rel(IB, orders, "сохраняет выбранную заявку")
+Rel(orders, SMS, "Код")
+Rel(SMS, client, "Код", "async mobile", $tags="dashed")
+Rel(IB, orders, "Код SMS введенный клиентом")
+Rel(orders, backoffice_deposit, "уведомляет сотрудника депозитного отдела о новой подтвержденной заявке")
+Rel(backoffice_deposit, ABS, "подтверждает ставку и открывает депозит")
+
+
+Rel(backoffice_credit, deposits, "загрузить файл со стаками и финансовыми расчетами")
+Rel(deposits, backoffice_deposit, "уведомляет о загрузке файла")
+
+Rel(backoffice_deposit, deposits, "Скачивает файл, обновляет цены на депозиты и персональные депозиты")
+
+
+Rel_Neighbor(client, branch_employee, "обращается для открытия депозита")
+Rel(branch_employee, deposits, "список депозитов с актуальными  и персональными ставками")
+Rel(branch_employee, orders, "с выбранном депозитом делает подтвержденную заявку в систему заявок")
+
+@enduml

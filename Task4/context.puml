@@ -1,0 +1,21 @@
+@startuml
+!include ../c4/C4_Context.puml
+AddRelTag("dashed", $textColor=$ARROW_FONT_COLOR, $lineColor=$ARROW_COLOR, $lineStyle=DashedLine())
+
+Person(callcenter_employee, "Сотрудник кол-центра", "Работает с системой кол-центра")
+Person(partner_callcenter_employee, "Сотрудник партнёрского кол-центра", "Работает во внешней системе")
+
+System_Boundary(it, "IT системы банка"){
+    System(deposits, "Каталог депозитов", "Централизованное хранилище и выгрузка ставок")
+    System(CallCRM, "Система кол-центра", "Внутренняя CRM банка для обработки звонков")
+}
+
+System_Ext(partner_callcenter, "Партнёрский кол-центр", "Внешняя система партнёра")
+
+Rel(deposits, CallCRM, "Передача актуальных ставок")
+Rel(CallCRM, callcenter_employee, "Доступ к ставкам по депозитам")
+
+Rel(deposits, partner_callcenter, "Выгрузка и отправка файла ставок (CSV/XLSX)")
+Rel(partner_callcenter, partner_callcenter_employee, "Доступ к ставкам из файла")
+
+@enduml

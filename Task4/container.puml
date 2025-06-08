@@ -1,0 +1,26 @@
+@startuml
+!include <C4/C4_Container>
+AddRelTag("dashed", $textColor=$ARROW_FONT_COLOR, $lineColor=$ARROW_COLOR, $lineStyle=DashedLine())
+
+Person(callcenter_employee, "Сотрудник кол-центра")
+Person(partner_callcenter_employee, "Сотрудник партнёрского кол-центра")
+
+System_Boundary(it, "IT системы банка"){
+    System_Boundary(deposits_domain, "Каталог депозитов"){
+        Container(deposits, "Каталог депозитов, хранение excel ставок", "ASP.NET, React.js")
+        ContainerDb(deposits_db, "DB депозитов", "MS SQL")
+        ContainerDb(deposits_s3, "S3 хранилище файлов excel", "s3")
+    }
+    Container(CallCRM, "Система кол-центра", "Внутренняя CRM банка для обработки звонков")
+}
+
+System_Ext(partner_callcenter, "Партнёрский кол-центр", "Внешняя система")
+
+Rel(deposits, deposits_db, "читает и обновляет ставки", "SQL")
+Rel(deposits, deposits_s3, "загружает и выгружает excel-файлы ставок", "s3")
+Rel(deposits, CallCRM, "Передаёт актуальные ставки", "")
+Rel(CallCRM, callcenter_employee, "Доступ к ставкам по депозитам", "")
+Rel(deposits, partner_callcenter, "Выгрузка и отправка файла ставок (CSV/XLSX) в внешнюю систему", "email/cloud")
+Rel(partner_callcenter, partner_callcenter_employee, "Доступ к ставкам из файла", "")
+
+@enduml
